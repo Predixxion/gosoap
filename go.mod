@@ -1,4 +1,4 @@
-module github.com/tiaguinho/gosoap
+module github.com/Predixxion/gosoap
 
 require (
 	github.com/google/go-cmp v0.5.0 // indirect
@@ -7,4 +7,4 @@ require (
 	gotest.tools v2.2.0+incompatible
 )
 
-go 1.13
+go 1.22
