@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -187,7 +186,7 @@ func (c *Client) Do(req *Request) (res *Response, err error) {
 
 	b, err := p.doRequest(c.Definitions.Services[0].Ports[0].SoapAddresses[0].Location)
 	if err != nil {
-		return nil, ErrorWithPayload{err, p.Payload}
+		return nil, ErrorWithPayload{err, p.Payload, b}
 	}
 
 	var soap SoapEnvelope
@@ -206,7 +205,7 @@ func (c *Client) Do(req *Request) (res *Response, err error) {
 		Payload: p.Payload,
 	}
 	if err != nil {
-		return res, ErrorWithPayload{err, p.Payload}
+		return res, ErrorWithPayload{err, p.Payload, b}
 	}
 
 	return res, nil
@@ -263,15 +262,16 @@ func (p *process) doRequest(url string) ([]byte, error) {
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		if !(p.Client.config != nil && p.Client.config.Dump) {
-			_, err := io.Copy(ioutil.Discard, resp.Body)
+			b, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return nil, err
 			}
+			return b, errors.New("unexpected status code: " + resp.Status)
 		}
 		return nil, errors.New("unexpected status code: " + resp.Status)
 	}
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }
 
 func (p *process) httpClient() *http.Client {
@@ -284,13 +284,22 @@ func (p *process) httpClient() *http.Client {
 // ErrorWithPayload error payload schema
 type ErrorWithPayload struct {
 	error
-	Payload []byte
+	Payload   []byte
+	ErrorBody []byte
 }
 
 // GetPayloadFromError returns the payload of a ErrorWithPayload
 func GetPayloadFromError(err error) []byte {
 	if err, ok := err.(ErrorWithPayload); ok {
 		return err.Payload
+	}
+	return nil
+}
+
+// GetBodyFromError returns the response body of a ErrorWithPayload
+func GetBodyFromError(err error) []byte {
+	if err, ok := err.(ErrorWithPayload); ok {
+		return err.ErrorBody
 	}
 	return nil
 }
