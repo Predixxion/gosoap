@@ -4,8 +4,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"testing"
-
-	"gotest.tools/assert"
 )
 
 func TestUnmarshal(t *testing.T) {
@@ -99,8 +97,13 @@ func TestUnmarshal(t *testing.T) {
 		t.Logf("running %v test case", testCase.description)
 
 		err := testCase.response.Unmarshal(testCase.decodeStruct)
-		assert.Equal(t, testCase.isFaultError, IsFault(err))
+
+		if IsFault(err) != testCase.isFaultError {
+			t.Errorf("test case %v failed: expected IsFault(err) to be %v, but got %v",
+				testCase.description, testCase.isFaultError, IsFault(err))
+		}
 	}
+
 }
 
 func TestIsFault(t *testing.T) {
@@ -134,6 +137,11 @@ func TestIsFault(t *testing.T) {
 		t.Logf("running %v test case", testCase.description)
 
 		isFaultErr := IsFault(testCase.err)
-		assert.Equal(t, testCase.expectedIsFaultError, isFaultErr)
+
+		if isFaultErr != testCase.expectedIsFaultError {
+			t.Errorf("test case %v failed: expected IsFault(err) to be %v, but got %v",
+				testCase.description, testCase.expectedIsFaultError, isFaultErr)
+		}
 	}
+
 }
