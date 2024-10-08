@@ -6,8 +6,6 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-
-	"gotest.tools/assert"
 )
 
 func Test_getWsdlBody(t *testing.T) {
@@ -90,6 +88,9 @@ func TestFaultString(t *testing.T) {
 		t.Logf("running %v testCase", testCase.description)
 
 		faultStr := testCase.fault.String()
-		assert.Equal(t, testCase.expectedFaultStr, faultStr)
+		if faultStr != testCase.expectedFaultStr {
+			t.Errorf("expected: %v, got: %v", testCase.expectedFaultStr, faultStr)
+		}
 	}
+
 }
